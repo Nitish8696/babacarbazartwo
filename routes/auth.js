@@ -7,6 +7,7 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
+const { verifyTokenAndAdmin } = require("./verifyToken");
 
 
 router.post("/register", async (req, res) => {
@@ -120,7 +121,7 @@ router.post("/forgot-password", async (req, res) => {
       },
     });
 
-    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+    const resetLink = `https://babacarbazar.in/reset-password/${resetToken}`;
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: user.email,
@@ -184,7 +185,7 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-router.get("/all-users", async (req, res) => {
+router.get("/all-users",verifyTokenAndAdmin, async (req, res) => {
   try {
     const users = await User.find(); // Fetch all users from the database
     res.status(200).json({ success: true, data: users });

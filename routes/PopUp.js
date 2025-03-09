@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const PopupForm = require("../models/PopupForm");
+const {verifyTokenAndAdmin} = require("./verifyToken")
+const nodemailer = require("nodemailer");
+
+
 
 // POST: Save form data
 router.post("/submit-form", async (req, res) => {
@@ -8,23 +12,39 @@ router.post("/submit-form", async (req, res) => {
     const {
       name,
       mobileNumber,
-      email,
-      brand,
     } = req.body;
-    console.log(req.body);
     
 
     // Create a new form entry
     const formEntry = new PopupForm({
       name,
-      mobileNumber,
-      email,
-      brand,
-      
+      mobileNumber,  
     });
 
     // Save to database
     await formEntry.save();
+   
+    
+    
+    
+        const transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST,
+          port: process.env.EMAIL_PORT,
+          secure: process.env.EMAIL_PORT === "465", // true for SSL, false for TLS
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+    
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: process.env.ADMIN_EMAIL,
+          subject: "New PopUp Page Enquiery",
+          html: `<h2>New Inquiry Received</h2>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Mobile Number:</strong> ${mobileNumber}</p>`,
+        });
 
     res.status(201).json({ success: true, message: "Form submitted successfully!" });
   } catch (error) {
@@ -33,7 +53,7 @@ router.post("/submit-form", async (req, res) => {
   }
 });
 
-router.get("/get-forms", async (req, res) => {
+router.get("/get-forms",verifyTokenAndAdmin, async (req, res) => {
   try {
     // Fetch all the form entries from the database
     const forms = await PopupForm.find();
@@ -45,7 +65,7 @@ router.get("/get-forms", async (req, res) => {
   }
 });
 
-router.patch("/update-status/:id", async (req, res) => {
+router.patch("/update-status/:id",verifyTokenAndAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -78,7 +98,7 @@ router.patch("/update-status/:id", async (req, res) => {
   }
 });
 
-router.delete("/delete-form/:id", async (req, res) => {
+router.delete("/delete-form/:id",verifyTokenAndAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const deletedForm = await PopupForm.findByIdAndDelete(id);

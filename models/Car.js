@@ -20,7 +20,7 @@ const carSchema = new mongoose.Schema({
   fuelType: {
     type: String,
     required: true,
-    enum: ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'CNG', 'LPG'], // Fixed values
+    enum: ['Petrol', 'Diesel', 'Electric', 'Petrol + Hybrid', 'Petrol + CNG', 'LPG'], // Fixed values
   },
   transmissionType: {
     type: String,

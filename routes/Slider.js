@@ -5,6 +5,8 @@ const path = require("path");
 const fs = require("fs");
 const cloudinary = require("cloudinary").v2;
 const SliderImage = require("../models/Slider");
+const {verifyTokenAndAdmin} = require("./verifyToken")
+
 
 // Multer setup for temporary file storage
 const storage = multer.diskStorage({
@@ -20,7 +22,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // POST: Upload images to Cloudinary and save to DB
-router.post("/upload", upload.array("images"), async (req, res) => {
+router.post("/upload",verifyTokenAndAdmin, upload.array("images"), async (req, res) => {
         console.log(req.files)
   try {
     const imageUploads = await Promise.all(
@@ -36,8 +38,6 @@ router.post("/upload", upload.array("images"), async (req, res) => {
     const sliderImages = await SliderImage.insertMany(
       imageUploads.map((url) => ({ imageUrl: url }))
     );
-
-    console.log(imageUploads);
 
     res.status(201).json({ success: true, data: sliderImages });
   } catch (error) {
@@ -59,7 +59,7 @@ router.get("/", async (req, res) => {
       
 
 // DELETE: Remove a slider image
-router.delete("/:id", async (req, res) => {
+router.delete("/:id",verifyTokenAndAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const image = await SliderImage.findById(id);

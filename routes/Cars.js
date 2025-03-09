@@ -7,6 +7,8 @@ const uploadOnCloudinary = require("../utils/cloudinery");
 const Inquiry = require("../models/Inquiry"); // Adjust the path to your Inquiry model
 const cloudinary = require('cloudinary').v2; // Import cloudinary properly
 const fs = require("fs")
+const {verifyTokenAndAdmin} = require("./verifyToken")
+const nodemailer = require("nodemailer");
 
 
 
@@ -29,8 +31,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post("/add-cars", upload.array("images"), async (req, res) => {
-  console.log("hello 2")
+router.post("/add-cars",verifyTokenAndAdmin, upload.array("images"), async (req, res) => {
   console.log(req.files)
   console.log(req.body)
   let images = [];
@@ -125,12 +126,7 @@ router.get("/latest-cars", async (req, res) => {
   }
 });
 
-
-
-
-
-// PUT API to Edit a Car by ID
-router.put("/edit-cars/:id", upload.array("images"), async (req, res) => {
+router.put("/edit-cars/:id",verifyTokenAndAdmin, upload.array("images"), async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -188,14 +184,7 @@ router.put("/edit-cars/:id", upload.array("images"), async (req, res) => {
   }
 });
 
-
-
-
-
-
-
-
-router.post("/delete-car-images/:id", async (req, res) => {
+router.post("/delete-car-images/:id",verifyTokenAndAdmin, async (req, res) => {
   const { id } = req.params;
   const { imagesToDelete } = req.body;
   console.log(imagesToDelete);
@@ -305,7 +294,7 @@ router.get("/cars/:id", async (req, res) => {
 });
 
 // DELETE API to Delete a Car by ID
-router.delete("/delete-cars/:id", async (req, res) => {
+router.delete("/delete-cars/:id",verifyTokenAndAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -399,6 +388,24 @@ router.post('/car-inquiry', async (req, res) => {
     // Save the inquiry to the database
     const newInquiry = new Inquiry({ name, mobileNumber,carId,carTitle});
     await newInquiry.save();
+     const transporter = nodemailer.createTransport({
+              host: process.env.EMAIL_HOST,
+              port: process.env.EMAIL_PORT,
+              secure: process.env.EMAIL_PORT === "465", // true for SSL, false for TLS
+              auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+              },
+            });
+        
+            await transporter.sendMail({
+              from: process.env.EMAIL_USER,
+              to: process.env.ADMIN_EMAIL,
+              subject: `Car Page Enquiery`,
+              html: `<h2>New Inquiry Received ${carTitle}</h2>
+                <p><strong>Name:</strong> ${name}</p>
+                <p><strong>Mobile Number:</strong> ${mobileNumber}</p>`,
+            });
 
     res.status(201).json({ message: 'Inquiry received successfully.', Inquiry: newInquiry });
   } catch (error) {
@@ -407,7 +414,7 @@ router.post('/car-inquiry', async (req, res) => {
   }
 });
 
-router.delete("/car-inquiry/:id", async (req, res) => {
+router.delete("/car-inquiry/:id",verifyTokenAndAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     await Inquiry.findByIdAndDelete(id);
@@ -418,7 +425,7 @@ router.delete("/car-inquiry/:id", async (req, res) => {
   }
 });
 
-router.patch('/car-inquiry/:id/status', async (req, res) => {
+router.patch('/car-inquiry/:id/status',verifyTokenAndAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -458,7 +465,7 @@ router.patch('/car-inquiry/:id/status', async (req, res) => {
 });
 
 
-router.get("/car-inquiries", async (req, res) => {
+router.get("/car-inquiries",verifyTokenAndAdmin, async (req, res) => {
   try {
     // Fetch inquiries from the database
     const inquiries = await Inquiry.find();

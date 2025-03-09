@@ -3,7 +3,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const carRoute = require("./routes/Cars")
 const userRoute = require("./routes/auth")
-const slider = require("./routes/slider");
+const slider = require("./routes/Slider");
 const PopUp = require("./routes/PopUp");
 const Contact = require("./routes/contact");
 

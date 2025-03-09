@@ -12,16 +12,16 @@ const PopupForm = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    email: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    brand: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    // email: {
+    //   type: String,
+    //   required: true,
+    //   trim: true,
+    // },
+    // brand: {
+    //   type: String,
+    //   required: true,
+    //   trim: true,
+    // },
     status: { type: String, default: "Pending" }, // Add status field
 
   },
